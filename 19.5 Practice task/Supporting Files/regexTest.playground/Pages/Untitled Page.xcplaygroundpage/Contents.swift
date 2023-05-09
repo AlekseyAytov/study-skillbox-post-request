@@ -19,6 +19,7 @@ var regex2 = Regex {
     )
 }
 
+
 //let match = " ".matches(of: regex2)
 //
 //print(match.count)
@@ -35,7 +36,7 @@ var regex2 = Regex {
 //    print("not match")
 //}
 
-let firstMatch = "$".firstMatch(of: regex2)
+let firstMatch = "2999".firstMatch(of: regex)
 
 if let firstMatch = firstMatch {
     print(firstMatch.0)

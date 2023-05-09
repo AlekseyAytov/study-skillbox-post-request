@@ -9,8 +9,20 @@ import UIKit
 
 class CustomUITextField: UITextField {
     
+    var errorFlag: Bool 
+//        willSet {
+//            if newValue {
+//                errorBorderStile()
+//            } else {
+//                normalBorderStile()
+//            }
+//        }
+//    }
+    
     init(placeholder: String) {
+        errorFlag = true
         super.init(frame: .zero)
+        
         self.placeholder = placeholder
         borderStyle = .roundedRect
         clearButtonMode = .whileEditing
@@ -18,29 +30,36 @@ class CustomUITextField: UITextField {
         
 //        self.addDoneCancelToolbar()
         
-        autocapitalizationType = .none
+        autocapitalizationType = .sentences
         autocorrectionType = .no
         spellCheckingType = .no
         smartQuotesType = .no
         smartDashesType = .no
         smartInsertDeleteType = .no
         
-        normalBorderStile()
+        self.addTarget(self, action: #selector(textFieldEditingDidBegin), for: .editingDidBegin)
+        self.addTarget(self, action: #selector(textFieldEditingDidEnd), for: .editingDidEnd)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func normalBorderStile() {
+    private func normalBorderStile() {
         layer.borderColor = UIColor.lightGray.cgColor
         layer.borderWidth  = 1
         layer.cornerRadius = 4
     }
     
-    func errorBorderStile() {
+    private func errorBorderStile() {
         layer.borderColor = UIColor.red.cgColor
-        layer.borderWidth  = 1
+        layer.borderWidth  = 2
+        layer.cornerRadius = 4
+    }
+    
+    private func editingBorderStile() {
+        layer.borderColor = UIColor.blue.cgColor
+        layer.borderWidth  = 2
         layer.cornerRadius = 4
     }
     
@@ -49,6 +68,18 @@ class CustomUITextField: UITextField {
             return false
         }
         return true
+    }
+    
+    @objc func textFieldEditingDidBegin() {
+        editingBorderStile()
+    }
+    
+    @objc func textFieldEditingDidEnd() {
+        if !self.errorFlag {
+            normalBorderStile()
+        } else {
+            errorBorderStile()
+        }
     }
 }
 

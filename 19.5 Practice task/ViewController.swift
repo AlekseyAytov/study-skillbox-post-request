@@ -10,6 +10,8 @@ import RegexBuilder
 
 class ViewController: UIViewController {
     
+    let service = Service()
+    
     var dataForSending: [ModelTitle: String] = [:]
     
     let counrtyRegex = Regex {
@@ -19,15 +21,31 @@ class ViewController: UIViewController {
                 CharacterClass(.whitespace)
                 "-"
                 "'"
+                ""
             }
         )
     }
+    
+    let birthRegex = Regex {
+        One(.anyOf("1,2"))
+        Repeat(count: 3) {
+            .digit
+        }
+    }
+    
+    private lazy var aboutInfo: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.text = "aboutInfoaboutInfoaboutInfoaboutInfoaboutInfoaboutInfoaboutInfo"
+        return label
+    }()
     
     private lazy var stackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.distribution = .fill
-        stackView.spacing = 20
+        stackView.spacing = 10
         return stackView
     }()
     
@@ -50,7 +68,24 @@ class ViewController: UIViewController {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .fill
-        stackView.spacing = 5
+        stackView.spacing = 3
+        return stackView
+    }()
+    
+    lazy var nameErrorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "error"
+        label.textColor = .red
+        label.isHidden = true
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    private lazy var nameTextFieldStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 0
         return stackView
     }()
     
@@ -76,6 +111,23 @@ class ViewController: UIViewController {
         return stackView
     }()
     
+    lazy var lastnameErrorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "error"
+        label.textColor = .red
+        label.isHidden = true
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    private lazy var lastnameTextFieldStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 0
+        return stackView
+    }()
+    
 // ----- occupation -----------------------------
     
     private lazy var occupationLabel: UILabel = {
@@ -95,6 +147,23 @@ class ViewController: UIViewController {
         stackView.axis = .horizontal
         stackView.distribution = .fill
         stackView.spacing = 5
+        return stackView
+    }()
+    
+    lazy var occupationErrorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "error"
+        label.textColor = .red
+        label.isHidden = true
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    private lazy var occupationTextFieldStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 0
         return stackView
     }()
     
@@ -122,6 +191,23 @@ class ViewController: UIViewController {
         return stackView
     }()
     
+    lazy var birthErrorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "error"
+        label.textColor = .red
+        label.isHidden = true
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    private lazy var birthTextFieldStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 0
+        return stackView
+    }()
+    
 // ----- country --------------------------------
     
     private lazy var countryLabel: UILabel = {
@@ -144,15 +230,34 @@ class ViewController: UIViewController {
         return stackView
     }()
     
+    lazy var countryErrorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "error"
+        label.textColor = .red
+        label.isHidden = true
+        label.font = UIFont.systemFont(ofSize: 13)
+        return label
+    }()
+    
+    private lazy var countryTextFieldStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 0
+        return stackView
+    }()
+    
 // ----- buttons --------------------------------
     
     private lazy var buttonURLSession: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("buttonURLSession", for: .normal)
-        button.backgroundColor = .cyan
-        button.layer.cornerRadius = 10
-        button.layer.borderWidth = 3
-        button.layer.borderColor = UIColor.darkGray.cgColor
+        button.backgroundColor = UIColor(red: 0.95, green: 0.83, blue: 0.01, alpha: 1.00)
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor(red: 0.87, green: 0.76, blue: 0.00, alpha: 1.00).cgColor
+//        button.isEnabled = false
+    
         button.addTarget(self, action: #selector(buttonURLSessionPressed), for: .touchUpInside)
         return button
     }()
@@ -160,10 +265,12 @@ class ViewController: UIViewController {
     private lazy var buttonAlamofire: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("buttonAlamofire", for: .normal)
-        button.backgroundColor = .cyan
-        button.layer.cornerRadius = 10
-        button.layer.borderWidth = 3
-        button.layer.borderColor = UIColor.darkGray.cgColor
+        button.backgroundColor = UIColor(red: 0.95, green: 0.83, blue: 0.01, alpha: 1.00)
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor(red: 0.87, green: 0.76, blue: 0.00, alpha: 1.00).cgColor
+//        button.isEnabled = false
+        
         button.addTarget(self, action: #selector(buttonAlamofirePressed), for: .touchUpInside)
         return button
     }()
@@ -201,51 +308,43 @@ class ViewController: UIViewController {
     private func setupViews() {
         view.addSubview(stackView)
         
+        stackView.addArrangedSubview(aboutInfo)
+        
         stackView.addArrangedSubview(nameStackView)
-        stackView.addArrangedSubview(lastnameStackView)
-        stackView.addArrangedSubview(occupationStackView)
-        stackView.addArrangedSubview(birthStackView)
-        stackView.addArrangedSubview(countryStackView)
-        
         nameStackView.addArrangedSubview(nameLabel)
-        nameStackView.addArrangedSubview(nameTextField)
-        
+        nameStackView.addArrangedSubview(nameTextFieldStackView)
+        nameTextFieldStackView.addArrangedSubview(nameTextField)
+        nameTextFieldStackView.addArrangedSubview(nameErrorLabel)
+
+        stackView.addArrangedSubview(lastnameStackView)
         lastnameStackView.addArrangedSubview(lastnameLabel)
-        lastnameStackView.addArrangedSubview(lastnameTextField)
-        
+        lastnameStackView.addArrangedSubview(lastnameTextFieldStackView)
+        lastnameTextFieldStackView.addArrangedSubview(lastnameTextField)
+        lastnameTextFieldStackView.addArrangedSubview(lastnameErrorLabel)
+
+        stackView.addArrangedSubview(occupationStackView)
         occupationStackView.addArrangedSubview(occupationLabel)
-        occupationStackView.addArrangedSubview(occupationTextField)
-        
+        occupationStackView.addArrangedSubview(occupationTextFieldStackView)
+        occupationTextFieldStackView.addArrangedSubview(occupationTextField)
+        occupationTextFieldStackView.addArrangedSubview(occupationErrorLabel)
+
+        stackView.addArrangedSubview(birthStackView)
         birthStackView.addArrangedSubview(birthLabel)
-        birthStackView.addArrangedSubview(birthTextField)
+        birthStackView.addArrangedSubview(birthTextFieldStackView)
+        birthTextFieldStackView.addArrangedSubview(birthTextField)
+        birthTextFieldStackView.addArrangedSubview(birthErrorLabel)
         
+        stackView.addArrangedSubview(countryStackView)
         countryStackView.addArrangedSubview(countryLabel)
-        countryStackView.addArrangedSubview(countryTextField)
-        
+        countryStackView.addArrangedSubview(countryTextFieldStackView)
+        countryTextFieldStackView.addArrangedSubview(countryTextField)
+        countryTextFieldStackView.addArrangedSubview(countryErrorLabel)
+
         view.addSubview(buttonURLSession)
         view.addSubview(buttonAlamofire)
         view.addSubview(activityIndicator)
         view.addSubview(resultLabel)
         
-        nameLabel.snp.makeConstraints { make in
-            make.width.equalTo(120)
-        }
-        
-        lastnameLabel.snp.makeConstraints { make in
-            make.width.equalTo(120)
-        }
-        
-        occupationLabel.snp.makeConstraints { make in
-            make.width.equalTo(120)
-        }
-        
-        birthLabel.snp.makeConstraints { make in
-            make.width.equalTo(120)
-        }
-        
-        countryLabel.snp.makeConstraints { make in
-            make.width.equalTo(120)
-        }
     }
     
     private func setupConstraints() {
@@ -275,24 +374,59 @@ class ViewController: UIViewController {
             make.centerX.equalToSuperview()
             make.centerY.equalTo(stackView.snp.bottom).offset(100)
         }
+        
+        nameLabel.snp.makeConstraints { make in
+            make.width.equalTo(120)
+        }
+        
+        lastnameLabel.snp.makeConstraints { make in
+            make.width.equalTo(120)
+        }
+        
+        occupationLabel.snp.makeConstraints { make in
+            make.width.equalTo(120)
+        }
+        
+        birthLabel.snp.makeConstraints { make in
+            make.width.equalTo(120)
+        }
+        
+        countryLabel.snp.makeConstraints { make in
+            make.width.equalTo(120)
+        }
+        
     }
     
     @objc func buttonURLSessionPressed() {
         hideKeyboard()
-        print("buttonURLSessionPressed")
-        
-//        activityIndicator.startAnimating()
-//        resultLabel.isHidden.toggle()
-        emptyValidateTextFields()
+        if !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag {
+            print("Отправка запроса")
+        }
+        print(dataForSending)
+        print("------------------------")
+        service.uploadURLSession(networkModel: NetworkModel(data: dataForSending)) { data, response, error in
+            if let error = error {
+                print ("error: \(error)")
+                return
+            }
+            guard let response = response as? HTTPURLResponse,
+                (200...299).contains(response.statusCode) else {
+                print ("server error")
+                return
+            }
+            if let mimeType = response.mimeType,
+                mimeType == "application/json",
+                let data = data,
+                let dataString = String(data: data, encoding: .utf8) {
+                print ("got data: \(dataString)")
+            }
+        }
     }
     
     @objc func buttonAlamofirePressed() {
         hideKeyboard()
         print("buttonURLSessionPressed")
-//        activityIndicator.stopAnimating()
-//        resultLabel.isHidden.toggle()
         print(dataForSending)
-        
     }
     
     private func hideKeyboard() {
@@ -302,21 +436,6 @@ class ViewController: UIViewController {
         birthTextField.resignFirstResponder()
         countryTextField.resignFirstResponder()
     }
-    
-    func emptyValidateTextFields() {
-//        for title in ModelTitle.allCases {
-//            if let textValue = dataForSending[title], !textValue.trimmingCharacters(in: .whitespaces).isEmpty {
-//                print(textValue)
-//            } else {
-//                print("Error - \(title)")
-//            }
-//        }
-        if !nameTextField.isValueExist() {       nameTextField.errorBorderStile() }
-        if !lastnameTextField.isValueExist() {   lastnameTextField.errorBorderStile() }
-        if !occupationTextField.isValueExist() { occupationTextField.errorBorderStile() }
-        if !birthTextField.isValueExist() {      birthTextField.errorBorderStile() }
-        if !countryTextField.isValueExist() {    countryTextField.errorBorderStile() }
-    }
 }
 
 extension ViewController: UITextFieldDelegate {
@@ -325,34 +444,16 @@ extension ViewController: UITextFieldDelegate {
         return true
     }
     
-//    func textFieldDidBeginEditing(_ textField: UITextField) {
-//        let textField = textField as! CustomUITextField
-//
-//        switch textField {
-//        case nameTextField:
-//            textField.normalBorderStile()
-//        case lastnameTextField:
-//            textField.normalBorderStile()
-//        case occupationTextField:
-//            textField.normalBorderStile()
-//        case birthTextField:
-//            textField.normalBorderStile()
-//        case countryTextField:
-//            textField.normalBorderStile()
-//        default:
-//            return
-//        }
-//    }
-    
     // в данном методе производится валидация значений при вводе
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         
+        print("------------")
         print("range.location - \(range.location)")
         print("string - \(string)")
-        print("------------")
+        
         
         // запрет ввода первого симпола пробела
-        if range.location == 0 && string == " " { return false }
+        if range.location == 0, string == " " { return false }
         
         // если редактируются поля-Не-наследники CustomUITextField, то разрешаем изменения
         guard let textField = textField as? CustomUITextField else { return true }
@@ -360,28 +461,52 @@ extension ViewController: UITextFieldDelegate {
         // switch для определения конкретного поля, в котором происходит изменение
         switch textField {
         case nameTextField:
-            // при начале радактирования поля удаляем сообщение об ошибке
-            if range.location == 0 { textField.normalBorderStile() }
+            if nameTextField.errorFlag {
+                nameErrorLabel.isHidden = true
+            }
+            
+//            попытка сделать валидацию и присвоение значения во время ввода
+//            var temp = (nameTextField.text ?? "") + string
+//            if string == "" {
+//                temp.remove(at: temp.index(before: temp.endIndex))
+//            }
+//            if let errorMessage = nameValueValidate(value: temp) {
+//                nameTextField.errorFlag = true
+//                nameErrorLabel.isHidden = false
+//                nameErrorLabel.text = errorMessage
+//            } else {
+//                dataForSending[.name] = temp
+//                nameTextField.errorFlag = false
+//            }
+            
             return true
         case lastnameTextField:
-            if range.location == 0 { textField.normalBorderStile() }
+            if lastnameTextField.errorFlag {
+                lastnameErrorLabel.isHidden = true
+            }
             return true
         case occupationTextField:
-            if range.location == 0 { textField.normalBorderStile() }
+            if occupationTextField.errorFlag {
+                occupationErrorLabel.isHidden = true
+            }
             return true
         case birthTextField:
-            if range.location == 0 { textField.normalBorderStile() }
+            if birthTextField.errorFlag {
+                birthErrorLabel.isHidden = true
+            }
             
-            // если вводимая строка пустая (т.е. было удаление символа), то разрешаем изменение
+            // если вводимая строка пустая, то разрешаем изменение
             if string.isEmpty { return true }
             // если вводимая строка не приводиться к типу Int, то запрещаем изменения
             guard let _ = Int(string) else { return false }
-            // если введено более 4 символов, то запрещаем изменение
+            // если в поле более 4 символов, то запрещаем изменение
             if range.location >= 4 { return false }
             
             return true
         case countryTextField:
-            if range.location == 0 { textField.normalBorderStile() }
+            if countryTextField.errorFlag {
+                countryErrorLabel.isHidden = true
+            }
             
             // если нет ни одного совпадения с counrtyRegex, то запрещаем изменение
             guard let _ = string.firstMatch(of: counrtyRegex) else { return false }
@@ -393,20 +518,127 @@ extension ViewController: UITextFieldDelegate {
         }
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
+//    попытка сделать валидацию и присвоение значения во время ввода
+//    func textFieldShouldClear(_ textField: UITextField) -> Bool {
+//        switch textField {
+//        case nameTextField:
+//            dataForSending[.name] = nil
+//            return true
+//        default:
+//            return true
+//        }
+//    }
+    
+    // в методе производится валидация введенных в поля значений и присвоение этих значений локальной модели
+    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        print("textFieldShouldEndEditing")
+        
         switch textField {
         case nameTextField:
-            dataForSending[.name] = textField.text
+            if let errorMessage = nameValueValidate(value: nameTextField.text) {
+                nameTextField.errorFlag = true
+                nameErrorLabel.isHidden = false
+                nameErrorLabel.text = errorMessage
+            } else {
+                nameTextField.errorFlag = false
+                dataForSending[.name] = nameTextField.text
+            }
         case lastnameTextField:
-            dataForSending[.lastname] = textField.text
+            if let errorMessage = lastnameValueValidate(value: lastnameTextField.text) {
+                lastnameTextField.errorFlag = true
+                lastnameErrorLabel.isHidden = false
+                lastnameErrorLabel.text = errorMessage
+            } else {
+                lastnameTextField.errorFlag = false
+                dataForSending[.lastname] = lastnameTextField.text
+            }
         case occupationTextField:
-            dataForSending[.occupation] = textField.text
+            if let errorMessage = occupationValueValidate(value: occupationTextField.text) {
+                occupationTextField.errorFlag = true
+                occupationErrorLabel.isHidden = false
+                occupationErrorLabel.text = errorMessage
+            } else {
+                occupationTextField.errorFlag = false
+                dataForSending[.occupation] = occupationTextField.text
+            }
         case birthTextField:
-            dataForSending[.birth] = textField.text
+            if let errorMessage = birthValueValidate(value: birthTextField.text) {
+                birthTextField.errorFlag = true
+                birthErrorLabel.isHidden = false
+                birthErrorLabel.text = errorMessage
+            } else {
+                birthTextField.errorFlag = false
+                dataForSending[.birth] = birthTextField.text
+            }
         case countryTextField:
-            dataForSending[.country] = textField.text
+            if let errorMessage = countryValueValidate(value: countryTextField.text) {
+                countryTextField.errorFlag = true
+                countryErrorLabel.isHidden = false
+                countryErrorLabel.text = errorMessage
+            } else {
+                countryTextField.errorFlag = false
+                dataForSending[.country] = countryTextField.text
+            }
         default:
-            return
+            return true
+        }
+
+
+//        // для упрощения сделал проверку только на count
+//        if dataForSending.count >= 5 {
+//            print("all good")
+//            buttonAlamofire.isEnabled = true
+//            buttonURLSession.isEnabled = true
+//        }
+        
+        return true
+    }
+    
+    func nameValueValidate(value: String?) -> String? {
+        if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+            return nil
+        } else {
+            return "Заполните поле"
+        }
+    }
+    
+    func lastnameValueValidate(value: String?) -> String? {
+        if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+            return nil
+        } else {
+            return "Заполните поле"
+        }
+    }
+    
+    func occupationValueValidate(value: String?) -> String? {
+        if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+            return nil
+        } else {
+            return "Заполните поле"
+        }
+    }
+    
+    func birthValueValidate(value: String?) -> String? {
+        if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+            if let _ = value.wholeMatch(of: birthRegex) {
+                return nil
+            } else {
+                return "Введите год"
+            }
+        } else {
+            return "Заполните поле"
+        }
+    }
+    
+    func countryValueValidate(value: String?) -> String? {
+        if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+            if let _ = value.wholeMatch(of: counrtyRegex) {
+                return nil
+            } else {
+                return "Не может содержать символов"
+            }
+        } else {
+            return "Заполните поле"
         }
     }
 }
