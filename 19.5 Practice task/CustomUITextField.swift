@@ -19,11 +19,10 @@ class CustomUITextField: UITextField {
 //        }
 //    }
     
-    init(placeholder: String) {
+    init() {
         errorFlag = true
         super.init(frame: .zero)
         
-        self.placeholder = placeholder
         borderStyle = .roundedRect
         clearButtonMode = .whileEditing
         returnKeyType = .done

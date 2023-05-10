@@ -35,7 +35,7 @@ class ViewController: UIViewController {
         let label = UILabel()
         label.numberOfLines = 0
         label.textAlignment = .center
-        label.text = "aboutInfoaboutInfoaboutInfoaboutInfoaboutInfoaboutInfoaboutInfo"
+        label.text = Constants.Titles.aboutinfo
         return label
     }()
     
@@ -51,13 +51,13 @@ class ViewController: UIViewController {
     
     private lazy var nameLabel: UILabel = {
         let label = UILabel()
-        label.text = "nameLabel"
+        label.text = Constants.Titles.name
         label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         return label
     }()
     
     private lazy var nameTextField: CustomUITextField = {
-        let textField = CustomUITextField(placeholder: "nameTextField")
+        let textField = CustomUITextField()
         textField.delegate = self
         return textField
     }()
@@ -91,12 +91,12 @@ class ViewController: UIViewController {
     
     private lazy var lastnameLabel: UILabel = {
         let label = UILabel()
-        label.text = "lastnameLabel"
+        label.text = Constants.Titles.lastname
         return label
     }()
     
     private lazy var lastnameTextField: CustomUITextField = {
-        let textField = CustomUITextField(placeholder: "lastnameTextField")
+        let textField = CustomUITextField()
         textField.delegate = self
         return textField
     }()
@@ -130,12 +130,12 @@ class ViewController: UIViewController {
     
     private lazy var occupationLabel: UILabel = {
         let label = UILabel()
-        label.text = "occupationLabel"
+        label.text = Constants.Titles.occupation
         return label
     }()
     
     private lazy var occupationTextField: CustomUITextField = {
-        let textField = CustomUITextField(placeholder: "occupationTextField")
+        let textField = CustomUITextField()
         textField.delegate = self
         return textField
     }()
@@ -169,12 +169,12 @@ class ViewController: UIViewController {
     
     private lazy var birthLabel: UILabel = {
         let label = UILabel()
-        label.text = "birthLabel"
+        label.text = Constants.Titles.birth
         return label
     }()
     
     private lazy var birthTextField: CustomUITextField = {
-        let textField = CustomUITextField(placeholder: "birthTextField")
+        let textField = CustomUITextField()
         textField.delegate = self
         textField.keyboardType = .numberPad
         textField.textContentType = .dateTime
@@ -210,12 +210,12 @@ class ViewController: UIViewController {
     
     private lazy var countryLabel: UILabel = {
         let label = UILabel()
-        label.text = "countryLabel"
+        label.text = Constants.Titles.country
         return label
     }()
     
     private lazy var countryTextField: CustomUITextField = {
-        let textField = CustomUITextField(placeholder: "countryTextField")
+        let textField = CustomUITextField()
         textField.delegate = self
         return textField
     }()
@@ -249,7 +249,7 @@ class ViewController: UIViewController {
     
     private lazy var buttonURLSession: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("buttonURLSession", for: .normal)
+        button.setTitle(Constants.Titles.buttonURLSession, for: .normal)
         button.backgroundColor = UIColor(red: 0.95, green: 0.83, blue: 0.01, alpha: 1.00)
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 2
@@ -262,7 +262,7 @@ class ViewController: UIViewController {
     
     private lazy var buttonAlamofire: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("buttonAlamofire", for: .normal)
+        button.setTitle(Constants.Titles.buttonAlamofire, for: .normal)
         button.backgroundColor = UIColor(red: 0.95, green: 0.83, blue: 0.01, alpha: 1.00)
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 2
@@ -335,7 +335,6 @@ class ViewController: UIViewController {
         view.addSubview(buttonAlamofire)
         view.addSubview(activityIndicator)
         view.addSubview(resultLabel)
-        
     }
     
     private func setupConstraints() {
@@ -346,13 +345,13 @@ class ViewController: UIViewController {
         
         buttonAlamofire.snp.makeConstraints { make in
             make.width.equalTo(150)
-            make.centerX.equalToSuperview().offset(-100)
+            make.centerX.equalToSuperview().offset(100)
             make.top.equalTo(stackView.snp.bottom).offset(30)
         }
         
         buttonURLSession.snp.makeConstraints { make in
             make.width.equalTo(150)
-            make.centerX.equalToSuperview().offset(100)
+            make.centerX.equalToSuperview().offset(-100)
             make.top.equalTo(stackView.snp.bottom).offset(30)
         }
         
@@ -388,29 +387,56 @@ class ViewController: UIViewController {
         
     }
     
-    @objc func buttonURLSessionPressed() {
-        hideKeyboard()
-        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else { return }
-        
+    // поведение UI при отправке запроса
+    private func startingRequest() {
         resultLabel.isHidden = true
         activityIndicator.startAnimating()
         buttonAlamofire.isEnabled = false
         buttonURLSession.isEnabled = false
+    }
+    
+    enum StatusOfResult {
+        case error, success
+    }
+    
+    // поведение UI при получения результата запроса
+    private func endingRequest(status: StatusOfResult) {
+        self.activityIndicator.stopAnimating()
+        self.resultLabel.isHidden = false
         
-        Service.shared.sendURLSession(networkModel: NetworkModel(data: dataForSending)) { [weak self] data, response, error in
+        self.buttonAlamofire.isEnabled = true
+        self.buttonURLSession.isEnabled = true
+        
+        switch status {
+        case .error:
+            self.resultLabel.text = Constants.Titles.errorLabel
+            self.resultLabel.textColor = .red
+        case .success:
+            self.resultLabel.text = Constants.Titles.successLabel
+            self.resultLabel.textColor = .green
+        }
+    }
+    
+    @objc func buttonURLSessionPressed() {
+        hideKeyboard()
+        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else {
+            
+            // TODO: Сделать индикацую полей об отсутствии значений
+            resultLabel.isHidden = true
+            print("Заполните все поля")
+            return
+        }
+        
+        startingRequest()
+        
+        Service.shared.sendURLSession(networkModel: NetworkModel(data: dataForSending)) { [weak self] data, error in
             guard let self = self else { return }
             
             if let error = error {
                 print ("error: \(error.localizedDescription)")
                 
                 DispatchQueue.main.async {
-                    self.activityIndicator.stopAnimating()
-                    self.resultLabel.isHidden = false
-                    self.resultLabel.text = "error"
-                    self.resultLabel.textColor = .red
-                    
-                    self.buttonAlamofire.isEnabled = true
-                    self.buttonURLSession.isEnabled = true
+                    self.endingRequest(status: .error)
                 }
             }
             
@@ -418,13 +444,7 @@ class ViewController: UIViewController {
                 print("success - \(data)")
                 
                 DispatchQueue.main.async {
-                    self.activityIndicator.stopAnimating()
-                    self.resultLabel.isHidden = false
-                    self.resultLabel.text = "success"
-                    self.resultLabel.textColor = .green
-                    
-                    self.buttonAlamofire.isEnabled = true
-                    self.buttonURLSession.isEnabled = true
+                    self.endingRequest(status: .success)
                 }
             }
         }
@@ -437,25 +457,13 @@ class ViewController: UIViewController {
 //                print("error - \(error.localizedDescription)")
 //
 //                DispatchQueue.main.async {
-//                    self.activityIndicator.stopAnimating()
-//                    self.resultLabel.isHidden = false
-//                    self.resultLabel.text = "error"
-//                    self.resultLabel.textColor = .red
-//
-//                    self.buttonAlamofire.isEnabled = true
-//                    self.buttonURLSession.isEnabled = true
+//                    self.endingRequest(status: .error)
 //                }
 //            case .success(let data):
 //                print("success - \(data)")
 //
 //                DispatchQueue.main.async {
-//                    self.activityIndicator.stopAnimating()
-//                    self.resultLabel.isHidden = false
-//                    self.resultLabel.text = "success"
-//                    self.resultLabel.textColor = .green
-//
-//                    self.buttonAlamofire.isEnabled = true
-//                    self.buttonURLSession.isEnabled = true
+//                    self.endingRequest(status: .success)
 //                }
 //            }
 //        }
@@ -463,12 +471,15 @@ class ViewController: UIViewController {
     
     @objc func buttonAlamofirePressed() {
         hideKeyboard()
-        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else { return }
+        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else {
+            
+            // TODO: Сделать индикацую полей об отсутствии значений
+            resultLabel.isHidden = true
+            print("Заполните все поля")
+            return
+        }
         
-        resultLabel.isHidden = true
-        activityIndicator.startAnimating()
-        buttonAlamofire.isEnabled = false
-        buttonURLSession.isEnabled = false
+        startingRequest()
         
         Service.shared.sendAlamofire(networkModel: NetworkModel(data: dataForSending)) { [weak self] result in
             guard let self = self else { return }
@@ -478,25 +489,13 @@ class ViewController: UIViewController {
                 print("error - \(error.localizedDescription)")
 
                 DispatchQueue.main.async {
-                    self.activityIndicator.stopAnimating()
-                    self.resultLabel.isHidden = false
-                    self.resultLabel.text = "error"
-                    self.resultLabel.textColor = .red
-
-                    self.buttonAlamofire.isEnabled = true
-                    self.buttonURLSession.isEnabled = true
+                    self.endingRequest(status: .error)
                 }
             case .success(let data):
                 print("success - \(data)")
 
                 DispatchQueue.main.async {
-                    self.activityIndicator.stopAnimating()
-                    self.resultLabel.isHidden = false
-                    self.resultLabel.text = "success"
-                    self.resultLabel.textColor = .green
-
-                    self.buttonAlamofire.isEnabled = true
-                    self.buttonURLSession.isEnabled = true
+                    self.endingRequest(status: .success)
                 }
             }
         }
@@ -511,7 +510,11 @@ class ViewController: UIViewController {
     }
 }
 
+// MARK: - UITextFieldDelegate
+
 extension ViewController: UITextFieldDelegate {
+    
+    // при нажатии на кнопку Return скрыть клавиатуру
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
@@ -538,7 +541,7 @@ extension ViewController: UITextFieldDelegate {
                 nameErrorLabel.isHidden = true
             }
             
-//            попытка сделать валидацию и присвоение значения во время ввода
+//            TODO: сделать валидацию и присвоение значения во время ввода
 //            var temp = (nameTextField.text ?? "") + string
 //            if string == "" {
 //                temp.remove(at: temp.index(before: temp.endIndex))
@@ -591,7 +594,7 @@ extension ViewController: UITextFieldDelegate {
         }
     }
     
-//    попытка сделать валидацию и присвоение значения во время ввода
+//    TODO: сделать валидацию и присвоение значения во время ввода
 //    func textFieldShouldClear(_ textField: UITextField) -> Bool {
 //        switch textField {
 //        case nameTextField:
@@ -604,7 +607,6 @@ extension ViewController: UITextFieldDelegate {
     
     // в методе производится валидация введенных в поля значений и присвоение этих значений локальной модели
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        print("textFieldShouldEndEditing")
         
         switch textField {
         case nameTextField:
@@ -655,18 +657,11 @@ extension ViewController: UITextFieldDelegate {
         default:
             return true
         }
-
-
-//        // для упрощения сделал проверку только на count
-//        if dataForSending.count >= 5 {
-//            print("all good")
-//            buttonAlamofire.isEnabled = true
-//            buttonURLSession.isEnabled = true
-//        }
         
         return true
     }
     
+//  MARK: - Функции валидации введенных значений
     func nameValueValidate(value: String?) -> String? {
         if let value = value, !value.trimmingCharacters(in: .whitespaces).isEmpty {
             return nil
