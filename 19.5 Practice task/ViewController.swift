@@ -10,8 +10,6 @@ import RegexBuilder
 
 class ViewController: UIViewController {
     
-    let service = Service()
-    
     var dataForSending: [ModelTitle: String] = [:]
     
     let counrtyRegex = Regex {
@@ -277,14 +275,6 @@ class ViewController: UIViewController {
     
 // ----- result ---------------------------------
     
-    private lazy var resultStack: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.distribution = .fill
-        stackView.spacing = 0
-        return stackView
-    }()
-    
     private lazy var activityIndicator: UIActivityIndicatorView = {
         let view = UIActivityIndicatorView(style: .large)
         view.color = .orange
@@ -294,6 +284,7 @@ class ViewController: UIViewController {
     private lazy var resultLabel: UILabel = {
         let label = UILabel()
         label.text = "resultLabel"
+        label.isHidden = true
         return label
     }()
     
@@ -399,34 +390,116 @@ class ViewController: UIViewController {
     
     @objc func buttonURLSessionPressed() {
         hideKeyboard()
-        if !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag {
-            print("Отправка запроса")
-        }
-        print(dataForSending)
-        print("------------------------")
-        service.uploadURLSession(networkModel: NetworkModel(data: dataForSending)) { data, response, error in
+        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else { return }
+        
+        resultLabel.isHidden = true
+        activityIndicator.startAnimating()
+        buttonAlamofire.isEnabled = false
+        buttonURLSession.isEnabled = false
+        
+        Service.shared.sendURLSession(networkModel: NetworkModel(data: dataForSending)) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
             if let error = error {
-                print ("error: \(error)")
-                return
+                print ("error: \(error.localizedDescription)")
+                
+                DispatchQueue.main.async {
+                    self.activityIndicator.stopAnimating()
+                    self.resultLabel.isHidden = false
+                    self.resultLabel.text = "error"
+                    self.resultLabel.textColor = .red
+                    
+                    self.buttonAlamofire.isEnabled = true
+                    self.buttonURLSession.isEnabled = true
+                }
             }
-            guard let response = response as? HTTPURLResponse,
-                (200...299).contains(response.statusCode) else {
-                print ("server error")
-                return
-            }
-            if let mimeType = response.mimeType,
-                mimeType == "application/json",
-                let data = data,
-                let dataString = String(data: data, encoding: .utf8) {
-                print ("got data: \(dataString)")
+            
+            if let data = data {
+                print("success - \(data)")
+                
+                DispatchQueue.main.async {
+                    self.activityIndicator.stopAnimating()
+                    self.resultLabel.isHidden = false
+                    self.resultLabel.text = "success"
+                    self.resultLabel.textColor = .green
+                    
+                    self.buttonAlamofire.isEnabled = true
+                    self.buttonURLSession.isEnabled = true
+                }
             }
         }
+        
+//        Service.shared.sendURLSessionWithResult(networkModel: NetworkModel(data: dataForSending)) { [weak self] result in
+//            guard let self = self else { return }
+//
+//            switch result {
+//            case .failure(let error):
+//                print("error - \(error.localizedDescription)")
+//
+//                DispatchQueue.main.async {
+//                    self.activityIndicator.stopAnimating()
+//                    self.resultLabel.isHidden = false
+//                    self.resultLabel.text = "error"
+//                    self.resultLabel.textColor = .red
+//
+//                    self.buttonAlamofire.isEnabled = true
+//                    self.buttonURLSession.isEnabled = true
+//                }
+//            case .success(let data):
+//                print("success - \(data)")
+//
+//                DispatchQueue.main.async {
+//                    self.activityIndicator.stopAnimating()
+//                    self.resultLabel.isHidden = false
+//                    self.resultLabel.text = "success"
+//                    self.resultLabel.textColor = .green
+//
+//                    self.buttonAlamofire.isEnabled = true
+//                    self.buttonURLSession.isEnabled = true
+//                }
+//            }
+//        }
     }
     
     @objc func buttonAlamofirePressed() {
         hideKeyboard()
-        print("buttonURLSessionPressed")
-        print(dataForSending)
+        guard !nameTextField.errorFlag, !lastnameTextField.errorFlag, !occupationTextField.errorFlag, !birthTextField.errorFlag, !countryTextField.errorFlag else { return }
+        
+        resultLabel.isHidden = true
+        activityIndicator.startAnimating()
+        buttonAlamofire.isEnabled = false
+        buttonURLSession.isEnabled = false
+        
+        Service.shared.sendAlamofire(networkModel: NetworkModel(data: dataForSending)) { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .failure(let error):
+                print("error - \(error.localizedDescription)")
+
+                DispatchQueue.main.async {
+                    self.activityIndicator.stopAnimating()
+                    self.resultLabel.isHidden = false
+                    self.resultLabel.text = "error"
+                    self.resultLabel.textColor = .red
+
+                    self.buttonAlamofire.isEnabled = true
+                    self.buttonURLSession.isEnabled = true
+                }
+            case .success(let data):
+                print("success - \(data)")
+
+                DispatchQueue.main.async {
+                    self.activityIndicator.stopAnimating()
+                    self.resultLabel.isHidden = false
+                    self.resultLabel.text = "success"
+                    self.resultLabel.textColor = .green
+
+                    self.buttonAlamofire.isEnabled = true
+                    self.buttonURLSession.isEnabled = true
+                }
+            }
+        }
     }
     
     private func hideKeyboard() {
